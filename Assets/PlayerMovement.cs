@@ -1,28 +1,32 @@
 using UnityEngine;
 using Mirror;
 
-public class PlayerMovement : NetworkBehaviour
+public class PlayerController : NetworkBehaviour
 {
-    private float playerSpeed = 1f;
+    private float moveSpeed = 5f;
 
-    private Rigidbody2D rb;
     private Vector2 input;
 
-    private void Start()
+    void Update()
     {
-        rb = GetComponent<Rigidbody2D>();
+        if (isLocalPlayer)
+        {
+            // Получаем ввод от игрока
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+
+            // Применяем ввод для движения
+            SendInput(new Vector2(horizontal, vertical));
+        }
+        if (isServer)
+        {
+            transform.position = transform.position + Vector3.Normalize((Vector3)input) * moveSpeed * Time.deltaTime;
+        }
     }
 
-    private void Update()
+    [Command]
+    void SendInput(Vector2 inp)
     {
-        if (!isLocalPlayer)
-            return;
-
-        input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-    }
-
-    private void FixedUpdate()
-    {
-        rb.MovePosition(rb.position + input * playerSpeed * Time.fixedDeltaTime);
+        input = inp;
     }
 }
